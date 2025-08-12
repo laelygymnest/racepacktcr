@@ -1,445 +1,47 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Racepack — Inline Edit + GitHub Save</title>
-<style>
-  :root{--accent:#1f7a8c;--bg:#f5f7f8;--card:#fff;--muted:#666}
-  body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;background:var(--bg);color:#222}
-  main{max-width:1100px;margin:18px auto;padding:12px}
-  header{display:flex;align-items:center;gap:12px;padding:12px;background:linear-gradient(90deg,var(--accent),#2a9d8f);color:#fff;border-radius:6px}
-  header img{height:56px;border-radius:6px}
-  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  .card{background:var(--card);padding:12px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.04)}
-  input,select,button,textarea{padding:8px;border-radius:6px;border:1px solid #ddd}
-  button{cursor:pointer}
-  .btn{background:var(--accent);color:white;border:none;padding:8px 12px;border-radius:6px}
-  .btn.ghost{background:#f0f0f0;color:#333}
-  .muted{color:var(--muted);font-size:0.95rem}
-  .hidden{display:none}
-  .mt8{margin-top:8px}.mt12{margin-top:12px}
-  table{width:100%;border-collapse:collapse;margin-top:12px;background:var(--card);border-radius:6px;overflow:hidden}
-  thead th{background:#f7f7f7;position:sticky;top:0;padding:8px;border-bottom:1px solid #eee}
-  th,td{padding:8px;border-bottom:1px solid #f0f0f0;text-align:left;white-space:nowrap}
-  tbody tr:nth-child(even){background:#fbfbfb}
-  td[contenteditable]{background:#fffbe6}
-  .stock-grid{display:flex;gap:8px;flex-wrap:wrap}
-  .stock-item{background:var(--card);padding:8px;border-radius:8px;min-width:110px;box-shadow:0 4px 8px rgba(0,0,0,0.04);text-align:center}
-  .small{font-size:0.9rem;padding:6px 8px}
-  .danger{background:#e63946;color:white;border:none;padding:6px 8px;border-radius:6px}
-  .note{font-size:0.9rem;color:var(--muted)}
-  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  @media(max-width:900px){header{flex-direction:column;align-items:flex-start} table{font-size:13px}}
-</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Racepack Dashboard — Login</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<main>
-  <header>
-    <img id="logo" src="logo.jpg" alt="Logo (upload logo.jpg)"/>
-    <div>
-      <div style="font-weight:700;font-size:1.1rem">Racepack Dashboard — Inline Edit</div>
-      <div class="muted">Edit langsung di tabel — autosave ke GitHub (opsional)</div>
-    </div>
-  </header>
-
-  <!-- CONFIG PANEL: GitHub repo info & load -->
-  <section class="card mt12" id="cfg-panel">
-    <div class="row" style="justify-content:space-between">
-      <div>
-        <strong>Repository / file</strong>
-        <div class="muted">Masukkan info repo dan path file <code>data.json</code></div>
-      </div>
-      <div class="controls">
-        <input id="inp-owner" placeholder="owner (username/org)" />
-        <input id="inp-repo" placeholder="repo name" />
-        <input id="inp-path" placeholder="path (e.g. data.json)" value="data.json" />
-        <input id="inp-branch" placeholder="branch" value="main" style="width:120px"/>
-        <button id="btn-load" class="btn">Load data</button>
-      </div>
-    </div>
-
-    <div class="mt8 row" style="align-items:center">
-      <input id="inp-token" placeholder="Personal Access Token (opsional — untuk SAVE)" style="width:420px"/>
-      <button id="btn-save-token" class="btn ghost small">Simpan Token (session)</button>
-      <div class="note">Token disimpan hanya di sessionStorage sementara. <strong>Jangan</strong> gunakan PAT di komputer publik.</div>
-    </div>
-  </section>
-
-  <!-- LOGIN -->
-  <section class="card mt12" id="login-card">
-    <div class="row" style="justify-content:space-between;align-items:center">
-      <div>
-        <strong>Login</strong>
-        <div class="muted">Master bisa edit semua & simpan ke GitHub (butuh token). Staff hanya edit kolom tertentu.</div>
-      </div>
-      <div class="row">
-        <input id="login-user" placeholder="username (master / staff)" />
-        <input id="login-pass" placeholder="password" type="password" />
-        <button id="btn-login" class="btn">Masuk</button>
-        <button id="btn-logout" class="btn ghost small hidden">Logout</button>
-      </div>
-    </div>
-    <div class="mt8 note">Default accounts: master/master123 , staff/staff123</div>
-  </section>
-
-  <!-- DASHBOARD -->
-  <section id="dashboard" class="hidden">
-
-    <!-- Summary & stock settings -->
-    <div class="mt12 row" style="gap:12px">
-      <div class="card" style="flex:2">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><strong>Stok per Size</strong></div>
-          <div class="muted">Total, taken & remaining</div>
+    <div class="login-container">
+        <img src="logo.png" alt="Logo" class="logo">
+        <h2>Login</h2>
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Username">
         </div>
-        <div id="stock-grid" class="stock-grid mt8"></div>
-      </div>
-
-      <div class="card" style="flex:1;min-width:220px">
-        <div><strong>Ringkasan</strong></div>
-        <p class="mt8"><strong>Total awal:</strong> <span id="total-all">0</span></p>
-        <p><strong>Sudah Diambil:</strong> <span id="total-taken">0</span></p>
-        <p><strong>Belum Diambil:</strong> <span id="total-remaining">0</span></p>
-
-        <div id="stock-settings" class="mt8 hidden">
-          <div class="note">Atur stok awal per size (Master)</div>
-          <div id="stock-settings-form" class="mt8"></div>
-          <div class="mt8 row">
-            <button id="btn-save-stock" class="btn small">Simpan Stok</button>
-            <button id="btn-reset-stock" class="btn ghost small">Reset ke default</button>
-          </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Password">
         </div>
-      </div>
+        <button onclick="login()">Masuk</button>
+        <p id="login-error" class="error"></p>
     </div>
-
-    <!-- Add row quick (master can add all fields inline in table too) -->
-    <div class="mt12 card">
-      <div class="row" style="justify-content:space-between;align-items:center">
-        <div>
-          <strong>Pencarian & Tambah</strong>
-          <div class="muted">Cari No BIB / Nama / Barcode — Tambah baris baru langsung di tabel</div>
-        </div>
-        <div class="row">
-          <input id="search" placeholder="Cari No BIB, Nama, Barcode..." style="width:320px" />
-          <button id="btn-new-row" class="btn ghost small">Tambah Baris Kosong (Master)</button>
-          <button id="btn-refresh" class="btn ghost small">Reload (dari GitHub)</button>
-          <button id="btn-save-all" class="btn small">Simpan Sekarang ke GitHub</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Table (inline editing) -->
-    <div class="mt12 card">
-      <div style="overflow:auto;">
-        <table id="table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Kategori</th>
-              <th>No BIB</th>
-              <th>Nama Peserta</th>
-              <th>Size Baju</th>
-              <th>Barcode</th>
-              <th>Status</th>
-              <th>Nama Staff</th>
-              <th>Nama Pengambil</th>
-              <th>No HP Pengambil</th>
-              <th>No ID Card Pengambil</th>
-              <th>Keterangan</th>
-              <th>Aksi</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="mt12 note">Perubahan di sel akan <strong>otomatis disimpan ke localStorage</strong>. Untuk push ke GitHub, klik <em>Simpan Sekarang ke GitHub</em> (akan butuh PAT & repo info).</div>
-
-  </section>
-
-  <footer class="mt12 muted note">Catatan: Menyimpan langsung ke GitHub membutuhkan PAT. Jika tidak mau risk, jangan masukkan PAT; gunakan penyimpanan lokal saja.</footer>
-
-</main>
 
 <script>
-/* ===========================
-   Inline-edit app w/ GitHub save
-   ===========================
-   - Data model: array of objects with keys:
-     kategori, noBib, namaPeserta, size, barcode, status, namaStaff, namaPengambil, noHp, noIdCard, keterangan
-   - Stored in localStorage key: 'racepack_data_json'
-   - Stock stored in localStorage key: 'racepack_stock_json'
-*/
+const accounts = {
+    master: "master123",
+    staff: "staff123"
+};
 
-const LS_DATA = 'racepack_data_json';
-const LS_STOCK = 'racepack_stock_json';
-const DEFAULT_STOCK = {XS:10,S:20,M:30,L:30,XL:20,XXL:10,XXXL:5};
-const SIZES = ['XS','S','M','L','XL','XXL','XXXL'];
-const USERS = [{username:'master',password:'master123',role:'master'},{username:'staff',password:'staff123',role:'staff'}];
+function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-let DATA = [];
-let STOCK = {};
-let CURRENT_USER = null;
-
-// GitHub config (owner/repo/path/branch/token)
-let GH = {owner:'', repo:'', path:'data.json', branch:'main', token:''};
-const apiBase = 'https://api.github.com';
-
-// --------- Helpers ----------
-function saveLocal(){ localStorage.setItem(LS_DATA, JSON.stringify(DATA)); }
-function loadLocal(){ DATA = JSON.parse(localStorage.getItem(LS_DATA) || '[]'); }
-function saveStock(){ localStorage.setItem(LS_STOCK, JSON.stringify(STOCK)); }
-function loadStock(){ STOCK = JSON.parse(localStorage.getItem(LS_STOCK) || 'null') || {...DEFAULT_STOCK}; }
-function isTaken(s){ if(!s) return false; const v = String(s).toLowerCase(); return v==='diambil' || v==='sudah diambil' || v==='taken'; }
-
-// compute summary
-function computeSummary(){
-  const taken = {}; SIZES.forEach(s=>taken[s]=0);
-  DATA.forEach(r=>{
-    const sz = (r.size||'').toUpperCase();
-    if(SIZES.includes(sz) && isTaken(r.status)) taken[sz] += 1;
-  });
-  const remaining = {}; let totalAll=0,totalTaken=0;
-  SIZES.forEach(sz=>{
-    const init = Number(STOCK[sz]||0);
-    totalAll += init;
-    const t = taken[sz]||0;
-    totalTaken += t;
-    remaining[sz] = Math.max(0, init - t);
-  });
-  return {taken, remaining, totalAll, totalTaken, totalRemaining: totalAll - totalTaken};
-}
-
-// --------- Render UI ----------
-function showLogin(){ document.getElementById('login-card').style.display='block'; document.getElementById('dashboard').classList.add('hidden'); }
-function showDashboard(){ document.getElementById('login-card').style.display='none'; document.getElementById('dashboard').classList.remove('hidden'); document.getElementById('btn-logout').classList.remove('hidden'); }
-function renderStockSettingsForm(){
-  const wrap = document.getElementById('stock-settings-form'); wrap.innerHTML='';
-  SIZES.forEach(sz=>{
-    const div = document.createElement('div');
-    div.innerHTML = `<label>${sz}: <input id="stock_${sz}" type="number" min="0" value="${Number(STOCK[sz]||0)}" style="width:90px;margin-left:6px"/></label>`;
-    wrap.appendChild(div);
-  });
-}
-function renderStockGrid(){
-  const wrap = document.getElementById('stock-grid'); wrap.innerHTML='';
-  const sum = computeSummary();
-  SIZES.forEach(sz=>{
-    const div = document.createElement('div'); div.className='stock-item';
-    div.innerHTML = `<div style="font-size:0.9rem;color:var(--muted)">${sz}</div><strong style="font-size:1.2rem">${sum.remaining[sz]}</strong><div class="muted" style="font-size:0.8rem">taken ${sum.taken[sz]}</div>`;
-    wrap.appendChild(div);
-  });
-  document.getElementById('total-all').textContent = sum.totalAll;
-  document.getElementById('total-taken').textContent = sum.totalTaken;
-  document.getElementById('total-remaining').textContent = sum.totalRemaining;
-}
-function renderTable(rows){
-  const tbody = document.querySelector('#table tbody'); tbody.innerHTML='';
-  rows.forEach((r,i)=>{
-    const tr = document.createElement('tr');
-
-    // small helper for editable cell
-    const createCell = (val, key)=>{
-      const td = document.createElement('td');
-      td.textContent = val || '';
-      // determine permission
-      const masterEditable = CURRENT_USER && CURRENT_USER.role==='master';
-      const staffEditableKeys = ['status','namaStaff','namaPengambil','noHp','noIdCard','keterangan'];
-      const canEdit = masterEditable || (CURRENT_USER && CURRENT_USER.role==='staff' && staffEditableKeys.includes(key));
-      if(canEdit){
-        td.contentEditable = true;
-        td.dataset.key = key; td.dataset.idx = i;
-        td.addEventListener('blur', (e)=>{
-          const newVal = e.target.textContent.trim();
-          DATA[i][key] = newVal;
-          saveLocal();
-          renderStockGrid();
-          // debounce auto-push? we'll just update localStorage; push to GitHub only when requested or if token present auto-push
-          if(sessionStorage.getItem('gh_auto_push')==='true'){
-            pushToGitHub();
-          }
-        });
-      }
-      return td;
-    };
-
-    tr.appendChild((()=>{const td=document.createElement('td'); td.textContent = i+1; return td;})());
-    tr.appendChild(createCell(r.kategori||'','kategori'));
-    tr.appendChild(createCell(r.noBib||'','noBib'));
-    tr.appendChild(createCell(r.namaPeserta||'','namaPeserta'));
-    tr.appendChild(createCell(r.size||'','size'));
-    tr.appendChild(createCell(r.barcode||'','barcode'));
-    tr.appendChild(createCell(r.status||'','status'));
-    tr.appendChild(createCell(r.namaStaff||'','namaStaff'));
-    tr.appendChild(createCell(r.namaPengambil||'','namaPengambil'));
-    tr.appendChild(createCell(r.noHp||'','noHp'));
-    tr.appendChild(createCell(r.noIdCard||'','noIdCard'));
-    tr.appendChild(createCell(r.keterangan||'','keterangan'));
-
-    // action buttons
-    const tdAct = document.createElement('td');
-    if(CURRENT_USER && CURRENT_USER.role==='master'){
-      const btnDel = document.createElement('button'); btnDel.className='small danger'; btnDel.textContent='Hapus';
-      btnDel.addEventListener('click', ()=>{ if(confirm('Hapus baris ini?')){ DATA.splice(i,1); saveLocal(); renderTable(DATA); renderStockGrid(); }});
-      tdAct.appendChild(btnDel);
-    } else tdAct.textContent='-';
-    tr.appendChild(tdAct);
-
-    tbody.appendChild(tr);
-  });
-}
-
-// --------- GitHub integration (GET content & PUT update) ----------
-async function ghGetFile(owner,repo,path,branch,token){
-  // GET contents: /repos/{owner}/{repo}/contents/{path}?ref=branch
-  const url = `${apiBase}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`;
-  const headers = token ? { Authorization:`token ${token}` } : {};
-  const res = await fetch(url, { headers });
-  if(!res.ok) throw new Error(`GitHub GET error ${res.status} ${await res.text()}`);
-  return await res.json(); // includes .content (base64) and .sha
-}
-async function ghPutFile(owner,repo,path,branch,token,contentStr,sha,commitMsg){
-  const url = `${apiBase}/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
-  const body = {
-    message: commitMsg || `Update data.json via web UI`,
-    content: btoa(unescape(encodeURIComponent(contentStr))), // base64
-    branch: branch
-  };
-  if(sha) body.sha = sha;
-  const res = await fetch(url, {
-    method:'PUT',
-    headers: { Authorization:`token ${token}`, 'Content-Type':'application/json' },
-    body: JSON.stringify(body)
-  });
-  if(!res.ok) throw new Error(`GitHub PUT error ${res.status} ${await res.text()}`);
-  return await res.json();
-}
-
-// --------- Actions & event handlers ----------
-document.getElementById('btn-load').addEventListener('click', async ()=>{
-  GH.owner = document.getElementById('inp-owner').value.trim();
-  GH.repo = document.getElementById('inp-repo').value.trim();
-  GH.path = document.getElementById('inp-path').value.trim() || 'data.json';
-  GH.branch = document.getElementById('inp-branch').value.trim() || 'main';
-  const token = document.getElementById('inp-token').value.trim();
-  if(token) { GH.token = token; sessionStorage.setItem('gh_token', token); } else { GH.token = sessionStorage.getItem('gh_token') || ''; }
-  try{
-    // try to GET file via API (works for public repos without token)
-    const file = await ghGetFile(GH.owner,GH.repo,GH.path,GH.branch,GH.token || undefined);
-    // file.content is base64
-    const raw = decodeURIComponent(escape(atob(file.content.replace(/\n/g,''))));
-    DATA = JSON.parse(raw);
-    saveLocal();
-    renderTable(DATA);
-    loadStock(); renderStockGrid();
-    alert('Data berhasil dimuat dari repo.');
-  }catch(err){
-    alert('Gagal load data: ' + err.message);
-    console.error(err);
-  }
-});
-
-// Save token in session for convenience
-document.getElementById('btn-save-token').addEventListener('click', ()=>{
-  const t = document.getElementById('inp-token').value.trim();
-  if(!t){ alert('Masukkan token dahulu'); return; }
-  sessionStorage.setItem('gh_token', t);
-  GH.token = t;
-  alert('Token disimpan sementara (session).');
-});
-
-// login
-document.getElementById('btn-login').addEventListener('click', ()=>{
-  const u = document.getElementById('login-user').value.trim();
-  const p = document.getElementById('login-pass').value;
-  const user = USERS.find(x=>x.username===u && x.password===p);
-  if(!user){ alert('Login gagal'); return; }
-  CURRENT_USER = user;
-  sessionStorage.setItem('racepack_user', JSON.stringify(CURRENT_USER));
-  // show dashboard & enable master features
-  document.getElementById('cfg-panel').classList.add('hidden'); // hide config for clarity (optional)
-  showDashboard();
-  // show/hide stock settings
-  if(CURRENT_USER.role==='master') document.getElementById('stock-settings').classList.remove('hidden');
-  renderStockSettingsForm();
-  renderStockGrid();
-  renderTable(DATA);
-});
-
-// logout
-document.getElementById('btn-logout').addEventListener('click', ()=>{
-  sessionStorage.removeItem('racepack_user');
-  CURRENT_USER = null;
-  document.getElementById('cfg-panel').classList.remove('hidden');
-  showLogin();
-});
-
-// new blank row (master)
-document.getElementById('btn-new-row').addEventListener('click', ()=>{
-  if(!CURRENT_USER || CURRENT_USER.role!=='master'){ alert('Hanya master'); return; }
-  const blank = {kategori:'', noBib:'', namaPeserta:'', size:'', barcode:'', status:'Belum Diambil', namaStaff:'', namaPengambil:'', noHp:'', noIdCard:'', keterangan:''};
-  DATA.push(blank); saveLocal(); renderTable(DATA); renderStockGrid();
-});
-
-// refresh (reload from GitHub)
-document.getElementById('btn-refresh').addEventListener('click', async ()=>{
-  if(!confirm('Reload data dari GitHub akan menimpa local. Lanjutkan?')) return;
-  document.getElementById('btn-load').click();
-});
-
-// save to GitHub (manual)
-document.getElementById('btn-save-all').addEventListener('click', async ()=>{
-  // need GH.owner/repo/path/branch and token
-  GH.owner = document.getElementById('inp-owner').value.trim();
-  GH.repo = document.getElementById('inp-repo').value.trim();
-  GH.path = document.getElementById('inp-path').value.trim() || 'data.json';
-  GH.branch = document.getElementById('inp-branch').value.trim() || 'main';
-  GH.token = document.getElementById('inp-token').value.trim() || sessionStorage.getItem('gh_token') || '';
-  if(!GH.owner || !GH.repo || !GH.path || !GH.token) return alert('Masukkan owner, repo, path, dan token (token diperlukan untuk save).');
-
-  try{
-    // get current file to obtain sha if exists
-    const file = await ghGetFile(GH.owner,GH.repo,GH.path,GH.branch,GH.token);
-    const sha = file.sha;
-    const contentStr = JSON.stringify(DATA, null, 2);
-    const res = await ghPutFile(GH.owner,GH.repo,GH.path,GH.branch,GH.token,contentStr,sha,`Update data.json via web UI`);
-    alert('Saved to GitHub: ' + res.commit.sha);
-  }catch(err){
-    // if not found, try to create (PUT without sha)
-    try{
-      const contentStr = JSON.stringify(DATA, null, 2);
-      const res2 = await ghPutFile(GH.owner,GH.repo,GH.path,GH.branch,GH.token,contentStr,null,`Create data.json via web UI`);
-      alert('Created on GitHub: ' + res2.commit.sha);
-    }catch(err2){
-      alert('Gagal menyimpan ke GitHub: ' + err2.message);
-      console.error(err2);
+    if (accounts[username] && accounts[username] === password) {
+        if (username === "master") {
+            window.location.href = "master.html";
+        } else if (username === "staff") {
+            window.location.href = "staff.html";
+        }
+    } else {
+        document.getElementById("login-error").innerText = "Login gagal! Username atau password salah.";
     }
-  }
-});
-
-// Save stock
-document.getElementById('btn-save-stock').addEventListener('click', ()=>{
-  SIZES.forEach(sz => {
-    const v = Number(document.getElementById('stock_'+sz).value || 0);
-    STOCK[sz] = v;
-  });
-  saveStock();
-  renderStockGrid();
-  alert('Stok disimpan lokal.');
-});
-document.getElementById('btn-reset-stock').addEventListener('click', ()=>{
-  if(!confirm('Reset stok ke default?')) return;
-  STOCK = {...DEFAULT_STOCK}; saveStock(); renderStockSettingsForm(); renderStockGrid();
-});
-
-// auto-load saved session
-(function init(){
-  loadStock(); loadLocal();
-  const raw = sessionStorage.getItem('racepack_user');
-  if(raw){ CURRENT_USER = JSON.parse(raw); showDashboard(); renderStockGrid(); renderTable(DATA); }
-})();
+}
 </script>
 </body>
 </html>
