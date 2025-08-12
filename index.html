@@ -66,7 +66,7 @@ function login() {
     const user = document.getElementById("username").value.trim();
     const pass = document.getElementById("password").value.trim();
 
-    if ((user === "master" && pass === "master123") || (user === "staff" && pass === "staff123")) {
+    if ((user === "master" && pass === "master123") || (user === "tcr" && pass === "rahasia123")) {
         role = user;
         document.getElementById("loginPage").classList.add("hidden");
         document.getElementById("mainPage").classList.remove("hidden");
