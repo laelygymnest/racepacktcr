@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Manajemen Stok Baju</title>
+<style>
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f9f9f9; }
+    header { background:#333; color:#fff; padding:10px; text-align:center; }
+    .container { padding:20px; max-width:1000px; margin:auto; }
+    .hidden { display:none; }
+    table { width:100%; border-collapse: collapse; margin-top:15px; }
+    th, td { border:1px solid #ccc; padding:8px; text-align:left; }
+    th { background:#eee; }
+    input, select { padding:5px; }
+    .login-box { background:#fff; padding:20px; max-width:300px; margin:80px auto; border:1px solid #ccc; border-radius:8px; }
+    .login-box input { width:100%; margin:5px 0; }
+    .stats { margin-top:20px; padding:10px; background:#fff; border:1px solid #ccc; border-radius:8px; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>Manajemen Stok Baju</h1>
+</header>
+
+<div id="loginPage" class="login-box">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Masuk</button>
+</div>
+
+<div id="mainPage" class="container hidden">
+    <h2 id="roleDisplay"></h2>
+
+    <div class="stats" id="stockStats"></div>
+
+    <h3>Tambah Data</h3>
+    <div id="addForm"></div>
+
+    <h3>Data Peserta</h3>
+    <table id="dataTable">
+        <thead>
+            <tr>
+                <th>Kategori</th>
+                <th>No BIB</th>
+                <th>Nama Peserta</th>
+                <th>Size Baju</th>
+                <th>Status</th>
+                <th>Nama Staff</th>
+                <th>Nama Pengambil</th>
+                <th>No HP Pengambil</th>
+                <th>No ID Card</th>
+                <th>Keterangan</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+let role = "";
+let data = [];
+
+function login() {
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
+
+    if ((user === "master" && pass === "master123") || (user === "staff" && pass === "staff123")) {
+        role = user;
+        document.getElementById("loginPage").classList.add("hidden");
+        document.getElementById("mainPage").classList.remove("hidden");
+        document.getElementById("roleDisplay").innerText = "Login sebagai: " + role.toUpperCase();
+        renderForm();
+        renderTable();
+        updateStats();
+    } else {
+        alert("Username atau password salah!");
+    }
+}
+
+function renderForm() {
+    const formDiv = document.getElementById("addForm");
+    formDiv.innerHTML = "";
+
+    let formHTML = "";
+    if (role === "master") {
+        formHTML += `<input placeholder="Kategori" id="kategori">`;
+        formHTML += `<input placeholder="No BIB" id="noBib">`;
+        formHTML += `<input placeholder="Nama Peserta" id="namaPeserta">`;
+        formHTML += `<select id="sizeBaju">
+                        <option value="">Pilih Size</option>
+                        <option>XS</option><option>S</option><option>M</option>
+                        <option>L</option><option>XL</option><option>XXL</option><option>XXXL</option>
+                     </select>`;
+    }
+    formHTML += `<select id="status">
+                    <option value="">Status</option>
+                    <option>Belum Diambil</option>
+                    <option>Sudah Diambil</option>
+                 </select>`;
+    formHTML += `<input placeholder="Nama Staff" id="namaStaff">`;
+    formHTML += `<input placeholder="Nama Pengambil" id="namaPengambil">`;
+    formHTML += `<input placeholder="No HP Pengambil" id="noHp">`;
+    formHTML += `<input placeholder="No ID Card" id="noIdCard">`;
+    formHTML += `<input placeholder="Keterangan" id="keterangan">`;
+    formHTML += `<button onclick="addData()">Tambah</button>`;
+
+    formDiv.innerHTML = formHTML;
+}
+
+function addData() {
+    let entry = {};
+
+    if (role === "master") {
+        entry.kategori = document.getElementById("kategori").value;
+        entry.noBib = document.getElementById("noBib").value;
+        entry.namaPeserta = document.getElementById("namaPeserta").value;
+        entry.sizeBaju = document.getElementById("sizeBaju").value;
+    } else {
+        entry.kategori = "";
+        entry.noBib = "";
+        entry.namaPeserta = "";
+        entry.sizeBaju = "";
+    }
+
+    entry.status = document.getElementById("status").value;
+    entry.namaStaff = document.getElementById("namaStaff").value;
+    entry.namaPengambil = document.getElementById("namaPengambil").value;
+    entry.noHp = document.getElementById("noHp").value;
+    entry.noIdCard = document.getElementById("noIdCard").value;
+    entry.keterangan = document.getElementById("keterangan").value;
+
+    data.push(entry);
+    renderTable();
+    updateStats();
+}
+
+function renderTable() {
+    const tbody = document.querySelector("#dataTable tbody");
+    tbody.innerHTML = "";
+    data.forEach((row, i) => {
+        let tr = "<tr>";
+        tr += `<td>${row.kategori}</td>`;
+        tr += `<td>${row.noBib}</td>`;
+        tr += `<td>${row.namaPeserta}</td>`;
+        tr += `<td>${row.sizeBaju}</td>`;
+        tr += `<td>${row.status}</td>`;
+        tr += `<td>${row.namaStaff}</td>`;
+        tr += `<td>${row.namaPengambil}</td>`;
+        tr += `<td>${row.noHp}</td>`;
+        tr += `<td>${row.noIdCard}</td>`;
+        tr += `<td>${row.keterangan}</td>`;
+        tr += "</tr>";
+        tbody.innerHTML += tr;
+    });
+}
+
+function updateStats() {
+    let sizes = ["XS","S","M","L","XL","XXL","XXXL"];
+    let stats = {};
+    sizes.forEach(s => stats[s] = {total:0, sisa:0});
+    let totalBaju = 0, totalSisa = 0;
+
+    data.forEach(d => {
+        if (sizes.includes(d.sizeBaju)) {
+            stats[d.sizeBaju].total++;
+            if (d.status !== "Sudah Diambil") {
+                stats[d.sizeBaju].sisa++;
+            }
+        }
+    });
+
+    let html = "<strong>Stok Baju:</strong><br>";
+    sizes.forEach(s => {
+        html += `${s}: ${stats[s].total} total, ${stats[s].sisa} sisa<br>`;
+        totalBaju += stats[s].total;
+        totalSisa += stats[s].sisa;
+    });
+    html += `<br><strong>Total Baju:</strong> ${totalBaju} total, ${totalSisa} sisa`;
+
+    document.getElementById("stockStats").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
