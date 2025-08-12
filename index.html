@@ -3,45 +3,172 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Racepack Dashboard — Login</title>
-<link rel="stylesheet" href="style.css">
+<title>Racepack Dashboard</title>
+<style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f4f4f4; }
+    header { background: #009688; color: white; padding: 10px; display: flex; align-items: center; }
+    header img { height: 50px; margin-right: 10px; }
+    header h1 { font-size: 20px; margin: 0; }
+    .container { max-width: 1200px; margin: auto; padding: 20px; background: white; }
+    input, select { padding: 5px; margin: 3px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    table, th, td { border: 1px solid #ccc; }
+    th, td { padding: 8px; text-align: left; }
+    .login-box { max-width: 300px; margin: 100px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .login-box input { width: 100%; margin-bottom: 10px; }
+    .stock { background: #eee; padding: 10px; margin-top: 10px; }
+</style>
 </head>
 <body>
-    <div class="login-container">
-        <img src="logo.png" alt="Logo" class="logo">
-        <h2>Login</h2>
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" placeholder="Username">
+
+<!-- Login -->
+<div id="loginPage" class="login-box">
+    <img src="logo.png" alt="Logo" style="display:block;margin:auto;height:60px;">
+    <h2 style="text-align:center;">Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Masuk</button>
+    <p style="font-size:12px;color:#666;">Master: master/master123<br>Staff: staff/staff123</p>
+</div>
+
+<!-- Dashboard -->
+<div id="dashboard" style="display:none;">
+    <header>
+        <img src="logo.png" alt="Logo">
+        <h1>Racepack Dashboard</h1>
+    </header>
+    <div class="container">
+        <div>
+            <input type="text" id="search" placeholder="Cari BIB / Nama / Barcode" onkeyup="renderTable()">
+            <button onclick="addRow()">Tambah Data</button>
+            <button onclick="logout()">Logout</button>
         </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" placeholder="Password">
-        </div>
-        <button onclick="login()">Masuk</button>
-        <p id="login-error" class="error"></p>
+
+        <div class="stock" id="stockInfo"></div>
+
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Kategori</th>
+                    <th>No BIB</th>
+                    <th>Nama Peserta</th>
+                    <th>Size Baju</th>
+                    <th>Barcode</th>
+                    <th>Status</th>
+                    <th>Nama Staff</th>
+                    <th>Nama Pengambil</th>
+                    <th>No Telp Pengambil</th>
+                    <th>ID Card Pengambil</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
+</div>
 
 <script>
-const accounts = {
-    master: "master123",
-    staff: "staff123"
-};
+let role = "";
+let data = JSON.parse(localStorage.getItem("racepackData") || "[]");
 
 function login() {
-    const username = document.getElementById("username").value.trim();
-    const password = document.getElementById("password").value.trim();
+    const user = document.getElementById("username").value.trim();
+    const pass = document.getElementById("password").value.trim();
 
-    if (accounts[username] && accounts[username] === password) {
-        if (username === "master") {
-            window.location.href = "master.html";
-        } else if (username === "staff") {
-            window.location.href = "staff.html";
-        }
+    if (user === "master" && pass === "master123") {
+        role = "master";
+    } else if (user === "staff" && pass === "staff123") {
+        role = "staff";
     } else {
-        document.getElementById("login-error").innerText = "Login gagal! Username atau password salah.";
+        alert("Login gagal");
+        return;
     }
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    renderTable();
+}
+
+function logout() {
+    role = "";
+    document.getElementById("dashboard").style.display = "none";
+    document.getElementById("loginPage").style.display = "block";
+}
+
+function addRow() {
+    let row = { kategori:"", bib:"", nama:"", size:"", barcode:"", status:"", staff:"", pengambil:"", telp:"", idcard:"", ket:"" };
+    data.push(row);
+    saveData();
+    renderTable();
+}
+
+function saveData() {
+    localStorage.setItem("racepackData", JSON.stringify(data));
+    renderStock();
+}
+
+function renderTable() {
+    const tbody = document.querySelector("#dataTable tbody");
+    tbody.innerHTML = "";
+    let search = document.getElementById("search").value.toLowerCase();
+
+    data.filter(r =>
+        r.bib.toLowerCase().includes(search) ||
+        r.nama.toLowerCase().includes(search) ||
+        r.barcode.toLowerCase().includes(search)
+    ).forEach((row, i) => {
+        let tr = document.createElement("tr");
+
+        Object.keys(row).forEach(key => {
+            let td = document.createElement("td");
+
+            let editable = false;
+            if (role === "master") {
+                editable = true;
+            } else if (role === "staff" && ["status","staff","pengambil","telp","idcard","ket"].includes(key)) {
+                editable = true;
+            }
+
+            if (editable) {
+                let input = document.createElement("input");
+                input.value = row[key];
+                input.onchange = e => {
+                    data[i][key] = e.target.value;
+                    saveData();
+                };
+                td.appendChild(input);
+            } else {
+                td.textContent = row[key];
+            }
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+
+    renderStock();
+}
+
+function renderStock() {
+    let sizes = ["XS","S","M","L","XL","XXL","XXXL"];
+    let stock = {};
+    sizes.forEach(s => stock[s] = { total:0, diambil:0 });
+
+    data.forEach(r => {
+        if (stock[r.size] !== undefined) {
+            stock[r.size].total++;
+            if (r.status.toLowerCase() === "diambil") {
+                stock[r.size].diambil++;
+            }
+        }
+    });
+
+    let html = "<strong>Stok Baju:</strong><br>";
+    sizes.forEach(s => {
+        let tersisa = stock[s].total - stock[s].diambil;
+        html += `${s}: Total ${stock[s].total}, Diambil ${stock[s].diambil}, Sisa ${tersisa}<br>`;
+    });
+    document.getElementById("stockInfo").innerHTML = html;
 }
 </script>
+
 </body>
 </html>
