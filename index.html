@@ -1,186 +1,479 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<title>Manajemen Stok Baju</title>
-<style>
-    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f9f9f9; }
-    header { background:#333; color:#fff; padding:10px; text-align:center; }
-    .container { padding:20px; max-width:1000px; margin:auto; }
-    .hidden { display:none; }
-    table { width:100%; border-collapse: collapse; margin-top:15px; }
-    th, td { border:1px solid #ccc; padding:8px; text-align:left; }
-    th { background:#eee; }
-    input, select { padding:5px; }
-    .login-box { background:#fff; padding:20px; max-width:300px; margin:80px auto; border:1px solid #ccc; border-radius:8px; }
-    .login-box input { width:100%; margin:5px 0; }
-    .stats { margin-top:20px; padding:10px; background:#fff; border:1px solid #ccc; border-radius:8px; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Racepack Dashboard (Master & Staff)</title>
+  <style>
+    :root{--accent:#e74c3c;--bg:#f6f7f9;--card:#fff;--muted:#667}
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;margin:0;background:var(--bg);color:#222}
+    header{display:flex;align-items:center;gap:12px;padding:12px 18px;background:linear-gradient(90deg,var(--accent),#d35400);color:#fff}
+    header img{height:56px;max-width:160px}
+    .container{max-width:1100px;margin:18px auto;padding:12px}
+    .centered{display:flex;align-items:center;justify-content:center}
+    .login-card{background:var(--card);padding:20px;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,0.08);width:360px;text-align:center}
+    input,select,button,textarea{padding:8px;border-radius:8px;border:1px solid #ddd}
+    button{cursor:pointer}
+    .btn{padding:8px 12px;border-radius:8px;border:none;background:var(--accent);color:white}
+    .btn.ghost{background:#f0f0f0;color:#333}
+    .muted{color:var(--muted)}
+    .hidden{display:none}
+    .card{background:var(--card);padding:12px;border-radius:8px;box-shadow:0 6px 16px rgba(0,0,0,0.03)}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .col{flex:1;min-width:140px}
+    .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+    .mt8{margin-top:8px}.mt12{margin-top:12px}
+    .summary{display:flex;gap:12px;flex-wrap:wrap}
+    .stock-item{background:var(--card);padding:8px;border-radius:8px;min-width:110px;box-shadow:0 4px 12px rgba(0,0,0,0.04);text-align:center}
+    table{width:100%;border-collapse:collapse;margin-top:12px;background:var(--card);border-radius:8px;overflow:hidden;display:block;max-height:420px;overflow:auto}
+    table thead{position:sticky;top:0;z-index:2}
+    th,td{padding:8px;border-bottom:1px solid #f0f0f0;text-align:left;white-space:nowrap}
+    thead th{background:#fafafa;position:sticky;top:0}
+    tbody tr:nth-child(even){background:#fbfbfb}
+    td[contenteditable]{background:#fff8e6}
+    .action-buttons{display:flex;gap:6px}
+    .small{padding:6px 8px;font-size:0.9rem}
+    .search{width:100%;padding:8px;border-radius:8px;border:1px solid #ddd}
+    .note{font-size:0.9rem;color:var(--muted)}
+    @media(max-width:800px){header img{height:44px} table{font-size:13px}}
+  </style>
 </head>
 <body>
 
-<header>
-    <h1>Manajemen Stok Baju</h1>
-</header>
+  <header>
+    <img src="logo.jpg" alt="Logo - upload logo.jpg ke repo">
+    <div>
+      <div style="font-weight:700">Racepack Dashboard</div>
+      <div class="muted" style="font-size:0.9rem">Kelola pengambilan baju — Master & Staff</div>
+    </div>
+  </header>
 
-<div id="loginPage" class="login-box">
-    <h2>Login</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Masuk</button>
-</div>
+  <main class="container">
 
-<div id="mainPage" class="container hidden">
-    <h2 id="roleDisplay"></h2>
+    <!-- LOGIN -->
+    <section id="section-login" class="centered" style="min-height:64vh;">
+      <div class="login-card">
+        <h2>Login</h2>
+        <div class="mt8">
+          <input id="login-username" placeholder="Username (master / staff)" style="width:100%" />
+        </div>
+        <div class="mt8">
+          <input id="login-password" placeholder="Password" type="password" style="width:100%" />
+        </div>
+        <div class="mt8 row" style="justify-content:center">
+          <button id="btn-login" class="btn">Masuk</button>
+          <button id="btn-demo" class="btn ghost" style="color:#333">Isi Contoh</button>
+        </div>
+        <p id="login-error" class="note" style="color:#b00020;display:none;margin-top:8px">Username / Password salah</p>
+        <p class="note mt8">Default: master / master123  •  staff / staff123</p>
+      </div>
+    </section>
 
-    <div class="stats" id="stockStats"></div>
+    <!-- DASHBOARD -->
+    <section id="section-dashboard" class="hidden">
 
-    <h3>Tambah Data</h3>
-    <div id="addForm"></div>
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div>
+          <h3 style="margin:0">Dashboard</h3>
+          <div class="muted">Role: <strong id="ui-role">-</strong></div>
+        </div>
+        <div class="row">
+          <div class="muted" id="ui-user"></div>
+          <button id="btn-logout" class="btn ghost">Logout</button>
+        </div>
+      </div>
 
-    <h3>Data Peserta</h3>
-    <table id="dataTable">
-        <thead>
-            <tr>
+      <!-- summary & stock settings -->
+      <div class="mt12 summary">
+        <div class="card stock-card" style="flex:2">
+          <h4 style="margin:0 0 8px 0">Stok per Size</h4>
+          <div id="stock-cards" class="row"></div>
+        </div>
+
+        <div class="card" style="flex:1;min-width:220px">
+          <h4 style="margin:0 0 8px 0">Ringkasan</h4>
+          <div class="note">Total awal per size dapat diatur oleh Master.</div>
+          <p style="margin:8px 0"><strong>Total Keseluruhan:</strong> <span id="total-all">0</span></p>
+          <p style="margin:8px 0"><strong>Sudah Diambil:</strong> <span id="total-taken">0</span></p>
+          <p style="margin:8px 0"><strong>Belum Diambil:</strong> <span id="total-remaining">0</span></p>
+
+          <div id="stock-settings" class="mt8 hidden">
+            <h5 style="margin:6px 0">Atur Stok Awal (Master)</h5>
+            <div id="stock-settings-form" class="form-grid"></div>
+            <div class="mt8 row">
+              <button id="save-stock" class="btn small">Simpan Stok</button>
+              <button id="reset-stock" class="btn ghost small">Reset Default</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Master add form -->
+      <div id="master-form" class="card mt12 hidden">
+        <h4 style="margin:0 0 8px 0">Tambah Peserta (Master)</h4>
+        <div class="form-grid">
+          <input id="f-kategori" placeholder="Kategori" />
+          <input id="f-no-bib" placeholder="No BIB" />
+          <input id="f-nama" placeholder="Nama Peserta" />
+          <select id="f-size">
+            <option value="">Pilih Size</option>
+            <option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>XXXL</option>
+          </select>
+          <!-- barcode setelah size -->
+          <input id="f-barcode" placeholder="Barcode" />
+          <select id="f-status">
+            <option>Belum Diambil</option>
+            <option>Diambil</option>
+          </select>
+          <input id="f-nama-staff" placeholder="Nama Staff (opsional)" />
+          <input id="f-nama-pengambil" placeholder="Nama Pengambil (opsional)" />
+          <input id="f-nohp" placeholder="No HP Pengambil (opsional)" />
+          <input id="f-idcard" placeholder="No ID Card Pengambil (opsional)" />
+          <input id="f-keterangan" placeholder="Keterangan (opsional)" />
+        </div>
+        <div class="mt8 row">
+          <button id="btn-add" class="btn">Tambah Data</button>
+          <button id="btn-clear" class="btn ghost">Kosongkan Form</button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="mt12">
+        <input id="search" class="search" placeholder="Cari No BIB, Nama Peserta, atau Barcode..." />
+      </div>
+
+      <!-- Table -->
+      <div class="mt12 card">
+        <div style="overflow:auto">
+          <table id="table-data">
+            <thead>
+              <tr>
+                <th>#</th>
                 <th>Kategori</th>
                 <th>No BIB</th>
                 <th>Nama Peserta</th>
                 <th>Size Baju</th>
+                <th>Barcode</th>
                 <th>Status</th>
                 <th>Nama Staff</th>
                 <th>Nama Pengambil</th>
                 <th>No HP Pengambil</th>
-                <th>No ID Card</th>
+                <th>No ID Card Pengambil</th>
                 <th>Keterangan</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</div>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+  </main>
 
 <script>
-let role = "";
-let data = [];
+/*
+  Final standalone app (static).
+  - Data stored in localStorage key: racepack_data
+  - Stock stored in localStorage key: racepack_stock
+  - Default accounts: master/master123  and staff/staff123
+*/
 
-function login() {
-    const user = document.getElementById("username").value.trim();
-    const pass = document.getElementById("password").value.trim();
+// ---------- constants ----------
+const LS_DATA = 'racepack_data_v1';
+const LS_STOCK = 'racepack_stock_v1';
+const USERS = [
+  {username:'master', password:'master123', role:'master'},
+  {username:'staff', password:'staff123', role:'staff'}
+];
+const SIZES = ['XS','S','M','L','XL','XXL','XXXL'];
+const DEFAULT_STOCK = {XS:10,S:20,M:30,L:30,XL:20,XXL:10,XXXL:5};
 
-    if ((user === "master" && pass === "master123") || (user === "tcr" && pass === "rahasia123")) {
-        role = user;
-        document.getElementById("loginPage").classList.add("hidden");
-        document.getElementById("mainPage").classList.remove("hidden");
-        document.getElementById("roleDisplay").innerText = "Login sebagai: " + role.toUpperCase();
-        renderForm();
-        renderTable();
-        updateStats();
-    } else {
-        alert("Username atau password salah!");
-    }
+// ---------- state ----------
+let DATA = []; // array of objects
+let STOCK = {}; // object size->initial count
+let CURRENT_USER = null;
+
+// ---------- util ----------
+function saveData(){ localStorage.setItem(LS_DATA, JSON.stringify(DATA)); }
+function loadData(){ DATA = JSON.parse(localStorage.getItem(LS_DATA) || '[]'); }
+function saveStock(){ localStorage.setItem(LS_STOCK, JSON.stringify(STOCK)); }
+function loadStock(){ STOCK = JSON.parse(localStorage.getItem(LS_STOCK) || 'null') || {...DEFAULT_STOCK}; }
+
+// normalize status string for comparison
+function isTakenStatus(s){
+  if(!s) return false;
+  const v = String(s).toLowerCase().trim();
+  return v === 'diambil' || v === 'sudah diambil' || v === 'taken';
 }
 
-function renderForm() {
-    const formDiv = document.getElementById("addForm");
-    formDiv.innerHTML = "";
-
-    let formHTML = "";
-    if (role === "master") {
-        formHTML += `<input placeholder="Kategori" id="kategori">`;
-        formHTML += `<input placeholder="No BIB" id="noBib">`;
-        formHTML += `<input placeholder="Nama Peserta" id="namaPeserta">`;
-        formHTML += `<select id="sizeBaju">
-                        <option value="">Pilih Size</option>
-                        <option>XS</option><option>S</option><option>M</option>
-                        <option>L</option><option>XL</option><option>XXL</option><option>XXXL</option>
-                     </select>`;
-    }
-    formHTML += `<select id="status">
-                    <option value="">Status</option>
-                    <option>Belum Diambil</option>
-                    <option>Sudah Diambil</option>
-                 </select>`;
-    formHTML += `<input placeholder="Nama Staff" id="namaStaff">`;
-    formHTML += `<input placeholder="Nama Pengambil" id="namaPengambil">`;
-    formHTML += `<input placeholder="No HP Pengambil" id="noHp">`;
-    formHTML += `<input placeholder="No ID Card" id="noIdCard">`;
-    formHTML += `<input placeholder="Keterangan" id="keterangan">`;
-    formHTML += `<button onclick="addData()">Tambah</button>`;
-
-    formDiv.innerHTML = formHTML;
+// compute summary taken & remaining
+function computeSummary(){
+  const taken = {}; SIZES.forEach(sz => taken[sz]=0);
+  DATA.forEach(r => {
+    const sz = (r.size||'').toUpperCase();
+    if(SIZES.includes(sz) && isTakenStatus(r.status)) taken[sz] += 1;
+  });
+  const remaining = {}; let totalAll=0, totalTaken=0;
+  SIZES.forEach(sz => {
+    const init = Number(STOCK[sz] || 0);
+    totalAll += init;
+    const t = taken[sz] || 0;
+    totalTaken += t;
+    remaining[sz] = Math.max(0, init - t);
+  });
+  return {taken, remaining, totalAll, totalTaken, totalRemaining: totalAll - totalTaken};
 }
 
-function addData() {
-    let entry = {};
-
-    if (role === "master") {
-        entry.kategori = document.getElementById("kategori").value;
-        entry.noBib = document.getElementById("noBib").value;
-        entry.namaPeserta = document.getElementById("namaPeserta").value;
-        entry.sizeBaju = document.getElementById("sizeBaju").value;
-    } else {
-        entry.kategori = "";
-        entry.noBib = "";
-        entry.namaPeserta = "";
-        entry.sizeBaju = "";
-    }
-
-    entry.status = document.getElementById("status").value;
-    entry.namaStaff = document.getElementById("namaStaff").value;
-    entry.namaPengambil = document.getElementById("namaPengambil").value;
-    entry.noHp = document.getElementById("noHp").value;
-    entry.noIdCard = document.getElementById("noIdCard").value;
-    entry.keterangan = document.getElementById("keterangan").value;
-
-    data.push(entry);
-    renderTable();
-    updateStats();
+// ---------- render UI ----------
+function showLogin(){ document.getElementById('section-login').style.display='flex'; document.getElementById('section-dashboard').classList.add('hidden'); }
+function showDashboard(){
+  document.getElementById('section-login').style.display='none';
+  document.getElementById('section-dashboard').classList.remove('hidden');
+  document.getElementById('ui-role').textContent = CURRENT_USER.role.toUpperCase();
+  document.getElementById('ui-user').textContent = CURRENT_USER.username;
+  // Master-only UI
+  if(CURRENT_USER.role === 'master'){
+    document.getElementById('master-form').classList.remove('hidden');
+    document.getElementById('stock-settings').classList.remove('hidden');
+  } else {
+    document.getElementById('master-form').classList.add('hidden');
+    document.getElementById('stock-settings').classList.add('hidden');
+  }
+  renderStockSettingsForm();
+  renderStockCards();
+  renderTable(DATA);
 }
 
-function renderTable() {
-    const tbody = document.querySelector("#dataTable tbody");
-    tbody.innerHTML = "";
-    data.forEach((row, i) => {
-        let tr = "<tr>";
-        tr += `<td>${row.kategori}</td>`;
-        tr += `<td>${row.noBib}</td>`;
-        tr += `<td>${row.namaPeserta}</td>`;
-        tr += `<td>${row.sizeBaju}</td>`;
-        tr += `<td>${row.status}</td>`;
-        tr += `<td>${row.namaStaff}</td>`;
-        tr += `<td>${row.namaPengambil}</td>`;
-        tr += `<td>${row.noHp}</td>`;
-        tr += `<td>${row.noIdCard}</td>`;
-        tr += `<td>${row.keterangan}</td>`;
-        tr += "</tr>";
-        tbody.innerHTML += tr;
-    });
+// render stock cards
+function renderStockCards(){
+  const wrap = document.getElementById('stock-cards');
+  wrap.innerHTML = '';
+  const summary = computeSummary();
+  SIZES.forEach(sz=>{
+    const div = document.createElement('div');
+    div.className = 'stock-item';
+    div.innerHTML = `<div style="font-size:0.85rem;color:var(--muted)">${sz}</div><strong style="font-size:1.25rem">${summary.remaining[sz]}</strong><div style="font-size:0.8rem;color:var(--muted)">taken ${summary.taken[sz]}</div>`;
+    wrap.appendChild(div);
+  });
+  document.getElementById('total-all').textContent = summary.totalAll;
+  document.getElementById('total-taken').textContent = summary.totalTaken;
+  document.getElementById('total-remaining').textContent = summary.totalRemaining;
 }
 
-function updateStats() {
-    let sizes = ["XS","S","M","L","XL","XXL","XXXL"];
-    let stats = {};
-    sizes.forEach(s => stats[s] = {total:0, sisa:0});
-    let totalBaju = 0, totalSisa = 0;
+// stock settings form for master
+function renderStockSettingsForm(){
+  const container = document.getElementById('stock-settings-form');
+  container.innerHTML = '';
+  SIZES.forEach(sz=>{
+    const label = document.createElement('label');
+    label.style = 'display:block;margin-bottom:6px';
+    label.innerHTML = `${sz}: <input type="number" id="stock_${sz}" value="${Number(STOCK[sz]||0)}" min="0" style="width:88px;margin-left:8px" />`;
+    container.appendChild(label);
+  });
+}
 
-    data.forEach(d => {
-        if (sizes.includes(d.sizeBaju)) {
-            stats[d.sizeBaju].total++;
-            if (d.status !== "Sudah Diambil") {
-                stats[d.sizeBaju].sisa++;
-            }
+// render table (rows can be filtered outside by passing filtered)
+function renderTable(rows){
+  const tbody = document.querySelector('#table-data tbody');
+  tbody.innerHTML = '';
+  rows.forEach((r, idx)=>{
+    const tr = document.createElement('tr');
+
+    // helper to create cell (editable depending on role & column)
+    const addCell = (value, key, editableFor)=>{
+      const td = document.createElement('td');
+      // show raw text or empty string
+      td.textContent = value || '';
+      // determine if editable: master => all, staff => only allowed keys
+      const masterEditable = CURRENT_USER && CURRENT_USER.role === 'master';
+      const staffEditableKeys = ['status','namaStaff','namaPengambil','noHp','noIdCard','keterangan'];
+      const canEdit = masterEditable || (CURRENT_USER && CURRENT_USER.role==='staff' && staffEditableKeys.includes(key));
+
+      if(canEdit){
+        td.contentEditable = true;
+        td.setAttribute('data-key', key);
+        td.setAttribute('data-idx', idx);
+        td.addEventListener('blur', (e)=>{
+          const newVal = e.target.textContent.trim();
+          DATA[idx][key] = newVal;
+          saveData();
+          renderStockCards();
+          // if edited status, ensure case/format
+        });
+      }
+      return td;
+    };
+
+    // columns: index, kategori,no bib,nama,size,barcode,status,namaStaff,namaPengambil,noHp,noIdCard,keterangan, aksi
+    tr.appendChild( (function(){ const td=document.createElement('td'); td.textContent = idx+1; return td; })() );
+    tr.appendChild( addCell(r.kategori||'','kategori') );
+    tr.appendChild( addCell(r.noBib||'','noBib') );
+    tr.appendChild( addCell(r.namaPeserta||'','namaPeserta') );
+    tr.appendChild( addCell(r.size||'','size') );
+    tr.appendChild( addCell(r.barcode||'','barcode') );
+    tr.appendChild( addCell(r.status||'','status') );
+    tr.appendChild( addCell(r.namaStaff||'','namaStaff') );
+    tr.appendChild( addCell(r.namaPengambil||'','namaPengambil') );
+    tr.appendChild( addCell(r.noHp||'','noHp') );
+    tr.appendChild( addCell(r.noIdCard||'','noIdCard') );
+    tr.appendChild( addCell(r.keterangan||'','keterangan') );
+
+    // aksi (master can delete)
+    const tdAct = document.createElement('td');
+    if(CURRENT_USER && CURRENT_USER.role === 'master'){
+      const btnSave = document.createElement('button');
+      btnSave.textContent = 'Simpan';
+      btnSave.className = 'small btn';
+      btnSave.style.marginRight = '6px';
+      btnSave.addEventListener('click', ()=>{
+        saveData();
+        renderStockCards();
+        alert('Tersimpan');
+      });
+      const btnDel = document.createElement('button');
+      btnDel.textContent = 'Hapus';
+      btnDel.className = 'small btn ghost';
+      btnDel.addEventListener('click', ()=>{
+        if(confirm('Hapus data ini?')){
+          DATA.splice(idx,1);
+          saveData();
+          renderTable(DATA);
+          renderStockCards();
         }
-    });
+      });
+      tdAct.appendChild(btnSave); tdAct.appendChild(btnDel);
+    } else {
+      tdAct.textContent = '-';
+    }
+    tr.appendChild(tdAct);
 
-    let html = "<strong>Stok Baju:</strong><br>";
-    sizes.forEach(s => {
-        html += `${s}: ${stats[s].total} total, ${stats[s].sisa} sisa<br>`;
-        totalBaju += stats[s].total;
-        totalSisa += stats[s].sisa;
-    });
-    html += `<br><strong>Total Baju:</strong> ${totalBaju} total, ${totalSisa} sisa`;
-
-    document.getElementById("stockStats").innerHTML = html;
+    tbody.appendChild(tr);
+  });
 }
+
+// ---------- actions ----------
+
+// login
+document.getElementById('btn-login').addEventListener('click', ()=>{
+  const u = document.getElementById('login-username').value.trim();
+  const p = document.getElementById('login-password').value;
+  const user = USERS.find(x=>x.username===u && x.password===p);
+  if(!user){
+    document.getElementById('login-error').style.display='block';
+    return;
+  }
+  document.getElementById('login-error').style.display='none';
+  CURRENT_USER = user;
+  sessionStorage.setItem('racepack_user', JSON.stringify(CURRENT_USER));
+  loadStock();
+  loadData();
+  showDashboard();
+});
+
+// demo fill
+document.getElementById('btn-demo').addEventListener('click', ()=>{
+  if(!confirm('Isi contoh data? (akan menimpa data yang ada jika sudah ada)')) return;
+  DATA = [
+    {kategori:'Event', noBib:'B001', namaPeserta:'Andi', size:'M', barcode:'BC001', status:'Belum Diambil', namaStaff:'', namaPengambil:'', noHp:'', noIdCard:'', keterangan:''},
+    {kategori:'Event', noBib:'B002', namaPeserta:'Budi', size:'L', barcode:'BC002', status:'Diambil', namaStaff:'Rika', namaPengambil:'Budi', noHp:'0812345678', noIdCard:'ID002', keterangan:''},
+    {kategori:'Event', noBib:'B003', namaPeserta:'Citra', size:'S', barcode:'BC003', status:'Belum Diambil', namaStaff:'', namaPengambil:'', noHp:'', noIdCard:'', keterangan:''},
+    {kategori:'Event', noBib:'B004', namaPeserta:'Dewi', size:'XL', barcode:'BC004', status:'Diambil', namaStaff:'Riko', namaPengambil:'Dewi', noHp:'081122233', noIdCard:'ID004', keterangan:''},
+  ];
+  STOCK = {...DEFAULT_STOCK};
+  saveData(); saveStock();
+  alert('Contoh data dimuat. Silakan login kembali.');
+});
+
+// logout
+document.getElementById('btn-logout').addEventListener('click', ()=>{
+  sessionStorage.removeItem('racepack_user');
+  CURRENT_USER = null;
+  showLogin();
+});
+
+// load/save data & stock
+function saveData(){ localStorage.setItem(LS_DATA, JSON.stringify(DATA)); }
+function loadData(){ DATA = JSON.parse(localStorage.getItem(LS_DATA) || '[]'); }
+function saveStock(){ localStorage.setItem(LS_STOCK, JSON.stringify(STOCK)); }
+function loadStock(){ STOCK = JSON.parse(localStorage.getItem(LS_STOCK) || 'null') || {...DEFAULT_STOCK}; }
+
+// add data (master)
+document.getElementById('btn-add').addEventListener('click', ()=>{
+  if(!CURRENT_USER || CURRENT_USER.role !== 'master'){ alert('Hanya master yang dapat menambah data'); return; }
+  const obj = {
+    kategori: document.getElementById('f-kategori').value.trim(),
+    noBib: document.getElementById('f-no-bib').value.trim(),
+    namaPeserta: document.getElementById('f-nama').value.trim(),
+    size: document.getElementById('f-size').value,
+    barcode: document.getElementById('f-barcode').value.trim(),
+    status: document.getElementById('f-status').value,
+    namaStaff: document.getElementById('f-nama-staff').value.trim(),
+    namaPengambil: document.getElementById('f-nama-pengambil').value.trim(),
+    noHp: document.getElementById('f-nohp').value.trim(),
+    noIdCard: document.getElementById('f-idcard').value.trim(),
+    keterangan: document.getElementById('f-keterangan').value.trim()
+  };
+  if(!obj.noBib || !obj.namaPeserta || !obj.size){ alert('No BIB, Nama Peserta, dan Size wajib diisi'); return; }
+  DATA.push(obj);
+  saveData();
+  renderTable(DATA);
+  renderStockCards();
+  // clear form
+  ['f-kategori','f-no-bib','f-nama','f-size','f-barcode','f-status','f-nama-staff','f-nama-pengambil','f-nohp','f-idcard','f-keterangan']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+});
+
+// clear form
+document.getElementById('btn-clear').addEventListener('click', ()=>{
+  ['f-kategori','f-no-bib','f-nama','f-size','f-barcode','f-status','f-nama-staff','f-nama-pengambil','f-nohp','f-idcard','f-keterangan']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+});
+
+// stock save/reset
+document.getElementById('save-stock').addEventListener('click', ()=>{
+  SIZES.forEach(sz=>{
+    const v = Number(document.getElementById('stock_'+sz).value || 0);
+    STOCK[sz] = v;
+  });
+  saveStock();
+  renderStockCards();
+  alert('Stok awal tersimpan.');
+});
+document.getElementById('reset-stock').addEventListener('click', ()=>{
+  if(!confirm('Reset stok ke default?')) return;
+  STOCK = {...DEFAULT_STOCK};
+  saveStock();
+  renderStockSettingsForm();
+  renderStockCards();
+});
+
+// search filter
+document.getElementById('search').addEventListener('input', (e)=>{
+  const q = e.target.value.trim().toLowerCase();
+  if(!q){ renderTable(DATA); return; }
+  const filtered = DATA.filter(r => {
+    return String(r.noBib||'').toLowerCase().includes(q) ||
+           String(r.namaPeserta||'').toLowerCase().includes(q) ||
+           String(r.barcode||'').toLowerCase().includes(q);
+  });
+  renderTable(filtered);
+});
+
+// restore session on load
+(function init(){
+  loadStock();
+  loadData();
+  const raw = sessionStorage.getItem('racepack_user');
+  if(raw){
+    CURRENT_USER = JSON.parse(raw);
+    showDashboard();
+  } else {
+    showLogin();
+  }
+})();
 </script>
 
 </body>
